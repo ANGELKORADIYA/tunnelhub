@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TunnelHub - Ngrok Tunnel Management Dashboard</title>
+    <meta name="description" content="Secure ngrok tunnel management dashboard with user-wise filtering and auto-refresh">
+
+    <!-- JSEncrypt for RSA encryption -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="login-header">
+                <h1>🔐 TunnelHub</h1>
+                <p>Secure Ngrok Tunnel Management</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="password">Admin Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Enter admin password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-text">Login</span>
+                    <span class="btn-loader" style="display: none;">Logging in...</span>
+                </button>
+                <p class="error-message" id="loginError" style="display: none;"></p>
+            </form>
+            <p class="footer-note">🔒 Password encrypted with RSA before transmission</p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard" style="display: none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>🚇 TunnelHub</h1>
+                <span class="badge">v1.0</span>
+            </div>
+            <div class="header-center">
+                <div class="refresh-indicator">
+                    <span class="refresh-icon">🔄</span>
+                    <span id="refreshStatus">Auto-refresh: <span id="refreshInterval">{{ auto_refresh_interval }}s</span></span>
+                    <button id="toggleRefresh" class="btn-icon" title="Toggle auto-refresh">⏸️</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <button id="manualRefresh" class="btn-icon" title="Refresh now">🔄</button>
+                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <div class="main-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Users</h2>
+                    <span class="user-count" id="userCount">0 users</span>
+                </div>
+                <div class="user-list" id="userList">
+                    <div class="user-item active" data-user-id="all">
+                        <span class="user-avatar">👥</span>
+                        <span class="user-name">All Users</span>
+                        <span class="tunnel-count" id="allTunnelCount">0</span>
+                    </div>
+                    <!-- Users will be dynamically added here -->
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-header">
+                    <h2 id="currentView">All Tunnels</h2>
+                    <div class="content-stats">
+                        <span class="stat-item">
+                            <span class="stat-label">Total:</span>
+                            <span class="stat-value" id="totalTunnels">0</span>
+                        </span>
+                        <span class="stat-item">
+                            <span class="stat-label">Online:</span>
+                            <span class="stat-value online" id="onlineTunnels">0</span>
+                        </span>
+                        <span class="stat-item">
+                            <span class="stat-label">Last updated:</span>
+                            <span class="stat-value" id="lastUpdate">Never</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Tunnels Grid -->
+                <div class="tunnels-grid" id="tunnelsGrid">
+                    <!-- Tunnel cards will be dynamically added here -->
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">🚇</div>
+                        <h3>No Tunnels Found</h3>
+                        <p>No tunnels are currently running. Check your ngrok configuration.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display: none;">
+        <span id="toastIcon"></span>
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Custom Name Modal -->
+    <div id="nameModal" class="modal" style="display: none;">
+        <div class="modal-content small">
+            <div class="modal-header">
+                <h3>Set Custom Name</h3>
+                <button class="btn-icon" onclick="closeNameModal()">✕</button>
+            </div>
+            <form id="nameForm">
+                <input type="hidden" id="nameTunnelId">
+                <div class="form-group">
+                    <label for="customName">Custom Name</label>
+                    <input
+                        type="text"
+                        id="customName"
+                        placeholder="Enter a custom name for this tunnel"
+                        required
+                        maxlength="100"
+                    >
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNameModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
