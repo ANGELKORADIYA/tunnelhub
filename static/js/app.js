@@ -350,64 +350,89 @@ function renderTunnels() {
     onlineTunnels.textContent = state.tunnels.filter(t => t.status === 'online').length;
     lastUpdate.textContent = formatTime(new Date().toISOString());
 
-    // Clear existing cards
-    grid.innerHTML = '';
+    // Get existing tunnel cards
+    const existingCards = Array.from(grid.querySelectorAll('.tunnel-card'));
+    const existingCardIds = existingCards.map(card => card.dataset.tunnelId);
 
+    // Get current tunnel IDs from state
+    const currentTunnelIds = state.tunnels.map(t => t.id);
+
+    // Remove cards that no longer exist in state
+    existingCards.forEach(card => {
+        if (!currentTunnelIds.includes(card.dataset.tunnelId)) {
+            card.remove();
+        }
+    });
+
+    // Handle empty state
     if (state.tunnels.length === 0) {
-        grid.appendChild(emptyState);
         emptyState.style.display = 'flex';
         return;
     }
 
     emptyState.style.display = 'none';
 
+    // Update or create tunnel cards
     state.tunnels.forEach(tunnel => {
-        const card = document.createElement('div');
-        card.className = 'tunnel-card';
+        let card = grid.querySelector(`.tunnel-card[data-tunnel-id="${tunnel.id}"]`);
 
         const displayName = tunnel.custom_name || tunnel.public_url;
         const protocol = tunnel.proto.toUpperCase();
         const statusClass = tunnel.status === 'online' ? '' : 'offline';
 
-        card.innerHTML = `
-            <div class="tunnel-header">
-                <div class="tunnel-title">
-                    <div class="tunnel-name">${displayName}</div>
-                    <div class="tunnel-url">${tunnel.public_url}</div>
-                </div>
-                <div class="tunnel-status ${statusClass}">
-                    <span class="status-dot"></span>
-                    ${tunnel.status}
-                </div>
-            </div>
-            <div class="tunnel-info">
-                <div class="tunnel-info-row">
-                    <span>🔗</span>
-                    <span>${protocol}</span>
-                </div>
-                <div class="tunnel-info-row">
-                    <span>📍</span>
-                    <span>${tunnel.region}</span>
-                </div>
-                <div class="tunnel-info-row">
-                    <span>👤</span>
-                    <span>${tunnel.user_name}</span>
-                </div>
-            </div>
-            <div class="tunnel-actions">
-                <button class="btn btn-primary btn-sm" onclick="copyTunnelUrl('${tunnel.public_url}')">
-                    📋 Copy URL
-                </button>
-                <button class="btn btn-secondary btn-sm" onclick="openNameModal('${tunnel.id}', '${tunnel.custom_name || ''}')">
-                    ✏️ Rename
-                </button>
-                <a href="${tunnel.public_url}" target="_blank" class="btn btn-secondary btn-sm">
-                    🔗 Open
-                </a>
-            </div>
-        `;
+        if (card) {
+            // Update existing card
+            card.querySelector('.tunnel-name').textContent = displayName;
+            card.querySelector('.tunnel-url').textContent = tunnel.public_url;
+            const statusDiv = card.querySelector('.tunnel-status');
+            statusDiv.className = `tunnel-status ${statusClass}`;
+            statusDiv.innerHTML = `<span class="status-dot"></span>${tunnel.status}`;
+        } else {
+            // Create new card
+            card = document.createElement('div');
+            card.className = 'tunnel-card';
+            card.dataset.tunnelId = tunnel.id;
 
-        grid.appendChild(card);
+            card.innerHTML = `
+                <div class="tunnel-header">
+                    <div class="tunnel-title">
+                        <div class="tunnel-name">${displayName}</div>
+                        <div class="tunnel-url">${tunnel.public_url}</div>
+                    </div>
+                    <div class="tunnel-status ${statusClass}">
+                        <span class="status-dot"></span>
+                        ${tunnel.status}
+                    </div>
+                </div>
+                <div class="tunnel-info">
+                    <div class="tunnel-info-row">
+                        <span>🔗</span>
+                        <span>${protocol}</span>
+                    </div>
+                    <div class="tunnel-info-row">
+                        <span>📍</span>
+                        <span>${tunnel.region}</span>
+                    </div>
+                    <div class="tunnel-info-row">
+                        <span>👤</span>
+                        <span>${tunnel.user_name}</span>
+                    </div>
+                </div>
+                <div class="tunnel-actions">
+                    <button class="btn btn-primary btn-sm" onclick="copyTunnelUrl('${tunnel.public_url}')">
+                        📋 Copy URL
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="openNameModal('${tunnel.id}', '${tunnel.custom_name || ''}')">
+                        ✏️ Rename
+                    </button>
+                    <a href="${tunnel.public_url}" target="_blank" class="btn btn-secondary btn-sm">
+                        🔗 Open
+                    </a>
+                </div>
+            `;
+
+            grid.appendChild(card);
+        }
     });
 }
 
