@@ -1,4 +1,8 @@
-# 🚇 TunnelHub
+<p align="center">
+  <img src="static/logo.png" alt="TunnelHub Logo" width="300">
+</p>
+
+# TunnelHub
 
 A secure ngrok tunnel management dashboard with RSA encryption, user-wise filtering, custom tunnel naming, and auto-refresh capabilities. Built with FastAPI and featuring enterprise-grade security for managing multiple ngrok tunnels across different users.
 
