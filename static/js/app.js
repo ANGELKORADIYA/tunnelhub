@@ -15,7 +15,8 @@ const state = {
     users: [],
     autoRefreshEnabled: true,
     autoRefreshInterval: 5000, // Will be updated from server
-    refreshTimer: null
+    refreshTimer: null,
+    countdown: 0
 };
 
 // ============================================
@@ -302,6 +303,8 @@ function renderUsers() {
     const userList = document.getElementById('userList');
     const userCount = document.getElementById('userCount');
 
+    if (!userList || !userCount) return;
+
     userCount.textContent = `${state.users.length} users`;
 
     // Clear existing users (except "All Users")
@@ -346,11 +349,11 @@ function renderTunnels() {
     const lastUpdate = document.getElementById('lastUpdate');
 
     // Update stats
-    totalTunnels.textContent = state.tunnels.length;
-    onlineTunnels.textContent = state.tunnels.filter(t => t.status === 'online').length;
-    lastUpdate.textContent = formatTime(new Date().toISOString());
+    if (totalTunnels) totalTunnels.textContent = state.tunnels.length;
+    if (onlineTunnels) onlineTunnels.textContent = state.tunnels.filter(t => t.status === 'online').length;
+    if (lastUpdate) lastUpdate.textContent = formatTime(new Date().toISOString());
 
-    // Get existing tunnel cards
+    if (!grid || !emptyState) return;
     const existingCards = Array.from(grid.querySelectorAll('.tunnel-card'));
     const existingCardIds = existingCards.map(card => card.dataset.tunnelId);
 
@@ -504,17 +507,44 @@ function startAutoRefresh() {
         clearInterval(state.refreshTimer);
     }
 
+    // Initialize countdown
+    state.countdown = state.autoRefreshInterval / 1000;
+
+    // Update UI immediately
+    const refreshIntervalEl = document.getElementById('refreshInterval');
+    if (refreshIntervalEl) {
+        refreshIntervalEl.textContent = `${state.countdown}s`;
+    }
+
     state.refreshTimer = setInterval(async () => {
-        if (state.autoRefreshEnabled && state.sessionToken) {
+        if (!state.autoRefreshEnabled || !state.sessionToken) return;
+
+        state.countdown--;
+
+        // Update UI
+        if (refreshIntervalEl) {
+            refreshIntervalEl.textContent = `${state.countdown}s`;
+        }
+
+        if (state.countdown <= 0) {
+            // Reset countdown
+            state.countdown = state.autoRefreshInterval / 1000;
+
+            // Fetch and render
             await fetchTunnels(state.currentUserFilter);
             renderTunnels();
             renderUsers();
+
+            // Reset UI after fetch
+            if (refreshIntervalEl) {
+                refreshIntervalEl.textContent = `${state.countdown}s`;
+            }
         }
-    }, state.autoRefreshInterval);
+    }, 1000);
 
     // Update UI
-    document.getElementById('refreshInterval').textContent = `${state.autoRefreshInterval / 1000}s`;
-    document.getElementById('toggleRefresh').textContent = '⏸️';
+    const toggleBtn = document.getElementById('toggleRefresh');
+    if (toggleBtn) toggleBtn.textContent = '⏸️';
 }
 
 /**
@@ -598,7 +628,8 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Get auto-refresh interval from template
-    const refreshIntervalFromServer = parseInt(document.querySelector('[data-auto-refresh-interval]')?.dataset.autoRefreshInterval || '5');
+    const refreshIntervalEl = document.getElementById('refreshInterval');
+    const refreshIntervalFromServer = parseInt(refreshIntervalEl?.dataset.autoRefreshInterval || '5');
     state.autoRefreshInterval = refreshIntervalFromServer * 1000;
 
     // Initialize app

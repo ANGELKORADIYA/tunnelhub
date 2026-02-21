@@ -52,7 +52,8 @@
             <div class="header-center">
                 <div class="refresh-indicator">
                     <span class="refresh-icon">🔄</span>
-                    <span id="refreshStatus">Auto-refresh: <span id="refreshInterval">{{ auto_refresh_interval
+                    <span id="refreshStatus">Next refresh in: <span id="refreshInterval"
+                            data-auto-refresh-interval="{{ auto_refresh_interval }}">{{ auto_refresh_interval
                             }}s</span></span>
                     <button id="toggleRefresh" class="btn-icon" title="Toggle auto-refresh">⏸️</button>
                 </div>
